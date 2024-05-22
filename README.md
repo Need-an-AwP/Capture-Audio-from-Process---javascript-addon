@@ -25,8 +25,6 @@
 <https://stackoverflow.com/questions/64318206/record-an-audio-stream-with-wasapi>
 <br>
 <https://learn.microsoft.com/en-us/samples/microsoft/windows-classic-samples/applicationloopbackaudio-sample/>
-<<<<<<< HEAD
 <br>
 <http://soundfile.sapp.org/doc/WaveFormat/>
-=======
->>>>>>> 8f018637922485004eb220c0e4f7dfeed557a07b
+
