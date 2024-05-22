@@ -1,17 +1,40 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Debug Main Process",
-        "type": "node",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-        "windows": {
-          "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
-        },
-        "args" : [".", "--trace-warnings"],
-        "outputCapture": "std"
-      }
-    ]
-  }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Main Process",
+      "type": "node",
+      "request": "launch",
+      "cwd": "C:/Users/17904/Desktop/voiceChat/test",
+      "runtimeExecutable": "C:/Users/17904/Desktop/voiceChat/test/node_modules/.bin/electron",
+      "windows": {
+        "runtimeExecutable": "C:/Users/17904/Desktop/voiceChat/test/node_modules/.bin/electron.cmd"
+      },
+      "args": [
+        ".",
+        "--trace-warnings"
+      ],
+      "outputCapture": "std"
+    },
+    {
+      "name": "g++ - Build and debug active file",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "C:/Users/17904/Desktop/voiceChat/test/src/a.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "C:/Users/17904/Desktop/voiceChat/test",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "C/C++: g++ build active file"
+    }
+  ]
+}
