@@ -24,11 +24,18 @@
 使用 ```npm start``` 运行
 
 如果chrome正在播放音频，electron 会自动获取其进程名并捕获其音频
+
 前台显示波形canvas会造成一般cpu占用
+
 
 ---
 流畅度测试：连接其他音频输出设备并在electron窗口中选择即可听到单独的捕获音频
 
+
+
+https://github.com/user-attachments/assets/b642a5bd-b0f9-4e9b-8cc8-c433533f089f
+
+这里录制时使用的桌面音频为默认输出，桌面音频2为蓝牙耳机输出
 
 在参考的众多资料中对我最有帮助的是
 <br>
