@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
+
+<head>
+  <meta charset="UTF-8">
+  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <title>Hello World!</title>
+</head>
+
+<body>
+  <div>
     We are using Node.js <span id="node-version"></span>,
     Chromium <span id="chrome-version"></span>,
     and Electron <span id="electron-version"></span>.
-    <br>
-    <br>
-    this is a test audio component
-    <br>
-    <div id="interval"></div>
-    <div id="bufferLenth"></div>
-    <br>
-    <audio id="mic" controls autoplay muted></audio>
-    <canvas id="canvas"></canvas>
-  </body>
+  </div>
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+  <div id="interval"></div>
+  <div id="bufferLenth"></div>
+  <br/>
+  <p>select output device</p>
+  <select id="outputDeviceSelect"></select>
+  <audio id="mic" controls autoplay muted></audio>
+  <canvas id="canvas"></canvas>
+</body>
+
 </html>

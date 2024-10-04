@@ -159,6 +159,28 @@ function contructBuffer(pcmData) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    navigator.mediaDevices.enumerateDevices()
+    .then((devices)=>{
+        const audioOutputDevices = devices.filter(device => device.kind === 'audiooutput');
+        const select = document.getElementById('outputDeviceSelect')
+        audioOutputDevices.forEach((device)=>{
+            const option = document.createElement('option')
+            option.value = device.deviceId
+            option.text = device.label
+            select.appendChild(option)
+        })
+
+        select.addEventListener('change',()=>{
+            const deviceId = select.value
+            console.log(deviceId)
+            localAudio.setSinkId(deviceId)
+        })
+    })
+    .catch((err)=>{
+        console.error(err)
+    })
+
+
     const localAudio = document.getElementById('mic')
     localAudio.srcObject = stream
     const canvas = document.getElementById('canvas')
