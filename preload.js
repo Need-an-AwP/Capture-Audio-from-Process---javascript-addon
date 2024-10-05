@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
-const test_addon = require('../test/build/Release/test_addon.node')
-const AudioVisualizer = require('../voiceChat-electron-tailscale/js/AudioLevelVisualizer')
+//const test_addon = require('../test/build/Release/test_addon.node')
+const test_addon = require('win-process-audio-capture')
+const AudioVisualizer = require('./js/AudioLevelVisualizer')
 
 
 function concatenateByteArrays(array1, array2) {

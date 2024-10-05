@@ -2,10 +2,19 @@
 
 ---
 这是一个c++编写，node—gyp编译的JavaScript插件，可以实现录制指定进程输出的音频数据并在js中重建可播放的音频数据
-<br>
+
 要使用自行编译的插件，需要node-gyp, vs构建工具，windows sdk，wil
+
 由于我的binding.gyp配置文件中的头文件目录使用了绝对路径，自行编译需要更改至正确路径
-我编译的版本位于./build\Release\test_addon.node
+
+~~我编译的版本位于./build\Release\test_addon.node~~
+此仓库中使用打包完成的node模块
+
+---
+使用electron builder打包
+dist目录中为打包完成的便携版exe文件，可以直接运行查看效果
+
+由于electron自动获取的是chrome的进程，所以chrome未运行及未播放音频时会检索不到
 
 ---
 这个插件通过WASAPI获取指定进程输出的音频
@@ -20,6 +29,7 @@
 > 手动解码成可播放数据的实现在考虑中，可能会带来一些性能提升
 
 ---
+在electron部分用了一个简单的纯js页面来测试
 使用 ```npm i``` 安装依赖
 使用 ```npm start``` 运行
 

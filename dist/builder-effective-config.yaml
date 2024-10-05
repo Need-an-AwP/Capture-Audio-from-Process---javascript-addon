@@ -1,0 +1,12 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.yourcompany.yourappname
+productName: portable electron
+win:
+  target: portable
+extraResources:
+  - from: js/AudioLevelVisualizer.js
+    to: js/AudioLevelVisualizer.js
+files: []
+electronVersion: 30.0.2
