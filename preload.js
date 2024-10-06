@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 //const test_addon = require('../test/build/Release/test_addon.node')
-const test_addon = require('win-process-audio-capture')
+const test_addon = require('./build/Release/test_addon.node')
 const AudioVisualizer = require('./js/AudioLevelVisualizer')
 
 
@@ -39,6 +39,7 @@ ctx_main.audioWorklet.addModule('handle-addon-data.js')
         handleAddonData.port.onmessage = (event) => {
             if (event.data.type === 'bufferLength') {
                 document.getElementById('bufferLenth').innerHTML = 'buffer length in audioworklet: ' + event.data.data
+                // if (event.data.data === 0) {console.log("buffer length is 0")}
             } else {
                 document.getElementById('interval').innerHTML = 'audio data to processor interval: ' + event.data + 'ms'
             }
@@ -161,25 +162,25 @@ function contructBuffer(pcmData) {
 
 window.addEventListener('DOMContentLoaded', () => {
     navigator.mediaDevices.enumerateDevices()
-    .then((devices)=>{
-        const audioOutputDevices = devices.filter(device => device.kind === 'audiooutput');
-        const select = document.getElementById('outputDeviceSelect')
-        audioOutputDevices.forEach((device)=>{
-            const option = document.createElement('option')
-            option.value = device.deviceId
-            option.text = device.label
-            select.appendChild(option)
-        })
+        .then((devices) => {
+            const audioOutputDevices = devices.filter(device => device.kind === 'audiooutput');
+            const select = document.getElementById('outputDeviceSelect')
+            audioOutputDevices.forEach((device) => {
+                const option = document.createElement('option')
+                option.value = device.deviceId
+                option.text = device.label
+                select.appendChild(option)
+            })
 
-        select.addEventListener('change',()=>{
-            const deviceId = select.value
-            console.log(deviceId)
-            localAudio.setSinkId(deviceId)
+            select.addEventListener('change', () => {
+                const deviceId = select.value
+                console.log(deviceId)
+                localAudio.setSinkId(deviceId)
+            })
         })
-    })
-    .catch((err)=>{
-        console.error(err)
-    })
+        .catch((err) => {
+            console.error(err)
+        })
 
 
     const localAudio = document.getElementById('mic')
@@ -237,7 +238,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const res = test_addon.initializeCLoopbackCapture(chromeProcessId)
         console.log(res)
-        const timer = setInterval(async () => {
+        /*
+        const timer = setInterval(() => {
             const res = test_addon.getActivateStatus()
             if (res.interfaceActivateResult === 0) {
                 //console.log("GetBufferSize: ", test_addon.getProcessCaptureFormat().GetBufferSize)
@@ -253,6 +255,31 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }, 10);
-
+        */
+        const intervalMs = 100
+        setInterval(() => {
+            const res = test_addon.getActivateStatus()
+            if (res.interfaceActivateResult === 0) {
+                try {
+                    test_addon.capture_500_async(intervalMs, (err, result) => {
+                        if (err) {
+                            console.error("Capture error:", err);
+                            return;
+                        }
+                        //console.log(result)
+                        if (result !== null) {
+                            ctx_main.decodeAudioData(result.wavData.buffer)
+                                .then((audioBuffer) => {
+                                    const wavChannelData = audioBuffer.getChannelData(0)
+                                    handleAddonData.port.postMessage(wavChannelData)
+                                })
+                        }
+                    })
+                }
+                catch (error) {
+                    console.error("Capture error:", error);
+                }
+            }
+        }, intervalMs)
     }
 })
