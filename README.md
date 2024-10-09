@@ -12,7 +12,7 @@
 拼接头信息和音频数据后得到了可以被正常解码的类似wav文件的数据，在传给js后可通过AudioContext的decodeAudioData解码成可被直接播放的浮点数数据
 数据之后通过audioworklet节点播放和显示频谱图
 
-> 手动解码成可播放数据的实现在考虑中，可能会带来一些性能提升
+> 直接传递可播放的pcm数据的实现在考虑中，可能会带来一些性能提升
 
 
 ### 安装要求
@@ -26,8 +26,8 @@
 
 > 由于binding.gyp配置文件中的头文件目录使用了绝对路径,自行编译需要更改至正确路径。
 
-~~我编译的版本位于./build\Release\test_addon.node~~
-此仓库中使用打包完成的node模块
+此仓库编译的node文件位于./build/Release/test_addon.node
+~~此仓库中使用打包完成的node模块~~
 
 模块打包仓库位于
 https://github.com/Need-an-AwP/win-process-audio-capture
@@ -35,45 +35,49 @@ https://github.com/Need-an-AwP/win-process-audio-capture
 ### Electron打包
 
 使用electron-builder打包。dist目录中为打包完成的便携版exe文件,可以直接运行查看效果。
-
 > 由于Electron自动获取的是Chrome的进程,所以Chrome未运行及未播放音频时会检索不到。
 
 
 ### 异步方法调用
 
-capture_500_async方法现可异步运行循环，在达到期望间隔后才会返回wav数据
-默认间隔为500毫秒，调用该方法的setinterval使用的间隔须与传入方法的间隔数值一致
-使用异步方法可大幅降低setinterval的调用速度，有效降低性能消耗
+capture_async现可实现响应式的方法，期望间隔时间后得到模块返回的wav数据
 >由于我没有找到更改m_AudioClient的缓冲区大小的有效方法，所以使用了这个外部缓冲区+异步调用的方式实现这个功能
 
-**以下是关键代码片段，请务必查看完整的使用案例**
-[使用示例](./preload.js)
+从audioworket节点中的.port.onmessage方法获取处理节点中的缓冲长度
 ```
-const intervalMs = 100
-setInterval(() => {
-const res = test_addon.getActivateStatus()
-    if (res.interfaceActivateResult === 0) {
-        try {
-            test_addon.capture_500_async(intervalMs, (err, result) => {
-                if (err) {
-                    console.error("Capture error:", err);
-                    return;
-                }
-                //console.log(result)
-                if (result !== null) {
-                    ctx_main.decodeAudioData(result.wavData.buffer)
-                        .then((audioBuffer) => {
-                            const wavChannelData = audioBuffegetChannelData(0)
-                            handleAddonData.port.postMessa(wavChannelData)
-                        })
-                }
-            })
+if (event.data.type === 'bufferLength') {
+    document.getElementById('bufferLenth').innerHTML = 'buffer length in audioworklet: ' + event.data.data
+}
+```
+当bufferLength为0时意味着该处理节点中的缓冲已被消耗完毕，如果等待补充缓冲的时间过长就会产生音频中断
+当中断时间非常短时人耳可能感知不到
+
+在前端页面中添加了一个canvas绘制bufferlength折线图
+
+**以下是关键代码片段，请务必查看[完整的使用案例](./preload.js)**
+```
+const result = test_addon.getActivateStatus()
+console.log(result)
+if (result.interfaceActivateResult === 0) {
+    const captureControl = test_addon.capture_async(500, (err, result) => {
+        if (err) {
+            console.error("Capture error:", err);
+            return;
         }
-        catch (error) {
-            console.error("Capture error:", error);
+        //console.log(result)
+        if (result !== null) {
+            ctx_main.decodeAudioData(result.wavData.buffer)
+                .then((audioBuffer) => {
+                    const wavChannelData = audioBuffer.getChannelData(0)
+                    handleAddonData.port.postMessage(wavChannelData)
+                })
         }
-    }
-}, intervalMs)
+    })
+
+    document.getElementById('stopCapture').addEventListener('click', () => {
+        captureControl.stop()
+    })
+}
 ```
 
 ### 运行测试

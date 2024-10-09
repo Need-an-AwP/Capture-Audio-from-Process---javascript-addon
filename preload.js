@@ -33,13 +33,26 @@ ctx_main.audioWorklet.addModule('random-noise-processor.js')
     })
 
 let handleAddonData
+let maxBL = -Infinity
+let minBL = Infinity
 ctx_main.audioWorklet.addModule('handle-addon-data.js')
     .then(() => {
         handleAddonData = new AudioWorkletNode(ctx_main, 'handle-addon-data')
         handleAddonData.port.onmessage = (event) => {
             if (event.data.type === 'bufferLength') {
-                document.getElementById('bufferLenth').innerHTML = 'buffer length in audioworklet: ' + event.data.data
-                // if (event.data.data === 0) {console.log("buffer length is 0")}
+                const bufferLength = event.data.data;
+                document.getElementById('bufferLenth').innerHTML = 'buffer length in audioworklet: ' + bufferLength;
+                if (bufferLength > maxBL) {
+                    maxBL = bufferLength
+                    document.getElementById('maxBL').innerHTML = 'max buffer length: ' + maxBL
+                }
+                if (bufferLength < minBL) {
+                    minBL = bufferLength
+                    document.getElementById('minBL').innerHTML = 'min buffer length: ' + minBL
+                }
+                // 更新图表
+                updateChart(bufferLength);
+
             } else {
                 document.getElementById('interval').innerHTML = 'audio data to processor interval: ' + event.data + 'ms'
             }
@@ -160,7 +173,89 @@ function contructBuffer(pcmData) {
     };
 }
 
+let canvas, ctx;
+const bufferLengthData = [];
+const maxDataPoints = 100; // 限制数据点数量
+const canvasWidth = 400;  // 增加宽度以容纳 Y 轴标签
+const canvasHeight = 200; // 增加高度以容纳 X 轴标签
+
+function initChart() {
+    canvas = document.getElementById('bufferLengthChart');
+    ctx = canvas.getContext('2d');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+}
+
+const maxBufferLength = 30000;
+const updateInterval = 10; // 每 5 个数据点更新一次图表
+
+let updateCounter = 0;
+
+function updateChart(newBufferLength) {
+    updateCounter++;
+    bufferLengthData.push(newBufferLength);
+    if (bufferLengthData.length > maxDataPoints) {
+        bufferLengthData.shift();
+    }
+
+    // 每 updateInterval 次调用才实际更新图表
+    if (updateCounter % updateInterval !== 0) {
+        return;
+    }
+
+    // 清除画布
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // 绘制背景
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // 绘制坐标轴
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Y轴
+    ctx.moveTo(30, 10);
+    ctx.lineTo(30, canvasHeight - 20);
+    ctx.stroke();
+
+    // 绘制刻度和标签
+    ctx.fillStyle = '#000000';
+    ctx.font = '10px Arial';
+    // Y轴刻度和标签
+    for (let i = 0; i <= 10; i++) {
+        const y = 10 + (canvasHeight - 30) * (1 - i / 10);
+        ctx.beginPath();
+        ctx.moveTo(25, y);
+        ctx.lineTo(30, y);
+        ctx.stroke();
+        ctx.fillText(Math.round(maxBufferLength * i / 10), 5, y + 3);
+    }
+
+    // 绘制数据点
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const step = (canvasWidth - 40) / (maxDataPoints - 1);
+    bufferLengthData.forEach((value, index) => {
+        const x = 30 + index * step;
+        const y = canvasHeight - 20 - ((value / maxBufferLength) * (canvasHeight - 30));
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    ctx.stroke();
+
+}
+
+
 window.addEventListener('DOMContentLoaded', () => {
+    if (chromeProcessId !== null) {
+        document.getElementById('chromeStatus').innerHTML = 'found chrome process id: ' + chromeProcessId
+    }
+    initChart()
     navigator.mediaDevices.enumerateDevices()
         .then((devices) => {
             const audioOutputDevices = devices.filter(device => device.kind === 'audiooutput');
@@ -255,7 +350,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }, 10);
-        */
+        
         const intervalMs = 100
         setInterval(() => {
             const res = test_addon.getActivateStatus()
@@ -281,5 +376,31 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }, intervalMs)
+        */
+
+        document.getElementById('startCapture').addEventListener('click', () => {
+            const result = test_addon.getActivateStatus()
+            console.log(result)
+            if (result.interfaceActivateResult === 0) {
+                const captureControl = test_addon.capture_async(500, (err, result) => {
+                    if (err) {
+                        console.error("Capture error:", err);
+                        return;
+                    }
+                    //console.log(result)
+                    if (result !== null) {
+                        ctx_main.decodeAudioData(result.wavData.buffer)
+                            .then((audioBuffer) => {
+                                const wavChannelData = audioBuffer.getChannelData(0)
+                                handleAddonData.port.postMessage(wavChannelData)
+                            })
+                    }
+                })
+
+                document.getElementById('stopCapture').addEventListener('click', () => {
+                    captureControl.stop()
+                })
+            }
+        })
     }
 })
